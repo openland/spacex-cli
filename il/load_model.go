@@ -336,6 +336,44 @@ func convertInputType(ff ast.Type, model *Model, clModel *ClientModel) Type {
 	}
 }
 
+func isIdenityType(name string, clModel *ClientModel) bool {
+	f := Find(clModel.Schema.Types, name)
+	for _, ff := range f.Fields {
+		if ff.Name == "id" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasField(name string, selection *ast.SelectionSet, clModel *ClientModel) bool {
+	if selection == nil {
+		return false
+	}
+	for s := range selection.Selections {
+		ss := selection.Selections[s].(ast.Node)
+		if ss.GetKind() == "FragmentSpread" {
+			fs := ss.(*ast.FragmentSpread)
+			if hasField(name, clModel.Fragments[fs.Name.Value].SelectionSet, clModel) {
+				return true
+			}
+		} else if ss.GetKind() == "Field" {
+			f := ss.(*ast.Field)
+			if f.Name.Value == name {
+				return true
+			}
+		} else if ss.GetKind() == "InlineFragment" {
+			fs := ss.(*ast.InlineFragment)
+			if hasField(name, fs.SelectionSet, clModel) {
+				return true
+			}
+		} else {
+			panic("Unknown selection: " + ss.GetKind())
+		}
+	}
+	return false
+}
+
 func convertSelection(typeName string, selection *ast.SelectionSet, model *Model, clModel *ClientModel) *SelectionSet {
 	if selection == nil {
 		return nil
@@ -344,6 +382,9 @@ func convertSelection(typeName string, selection *ast.SelectionSet, model *Model
 	fields := make([]*SelectionField, 0)
 	fragments := make([]*Fragment, 0)
 	inlineFragments := make([]*InlineFragment, 0)
+	if isIdenityType(typeName, clModel) && !hasField("id", selection, clModel) {
+		panic("Type " + typeName + " is missing id field in " + string(selection.Loc.Source.Body))
+	}
 	for s := range selection.Selections {
 		ss := selection.Selections[s].(ast.Node)
 		if ss.GetKind() == "FragmentSpread" {
