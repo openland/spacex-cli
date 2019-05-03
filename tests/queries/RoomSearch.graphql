@@ -1,0 +1,33 @@
+query RoomSearch {
+  items: betaRoomSearch(first: 150) {
+    __typename
+    edges {
+      __typename
+      cursor
+      node {
+        __typename
+          id
+          isChannel
+          kind
+          membersCount
+          membership
+          organization {
+            __typename
+            name
+            photo
+          }
+          photo
+          title
+      }
+    }
+    pageInfo {
+      __typename
+      currentPage
+      hasNextPage
+      hasPreviousPage
+      itemsCount
+      openEnded
+      pagesCount
+    }
+  }
+}
