@@ -3,6 +3,8 @@ package codegen
 import (
 	"github.com/openland/spacex-cli/il"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -413,9 +415,10 @@ func generateSelector(set *il.SelectionSet, output *Output) {
 
 func GenerateKotlin(model *il.Model, to string) {
 	output := NewOutput()
-	output.WriteLine("package com.openland.soyuz.gen")
+	output.WriteLine("package com.openland.spacex.gen")
 	output.WriteLine("")
-	output.WriteLine("import com.openland.soyuz.store.RecordSet")
+	output.WriteLine("import com.openland.spacex.store.*")
+	output.WriteLine("import com.openland.spacex.model.*")
 	output.WriteLine("import kotlinx.serialization.json.JsonObject")
 	output.WriteLine("")
 
@@ -514,7 +517,7 @@ func GenerateKotlin(model *il.Model, to string) {
 		output.WriteLine("override fun normalizeResponse(response: JsonObject): RecordSet {")
 		output.IndentAdd()
 		output.WriteLine("val collection = NormalizedCollection()")
-		output.WriteLine("normalize" + f.Name + "(Scope(\"ROOT_QUERY\", collection, response))")
+		output.WriteLine("normalize" + f.Name + "(Scope(null, collection, response))")
 		output.WriteLine("return collection.build()")
 		output.IndentRemove()
 		output.WriteLine("}")
@@ -531,18 +534,38 @@ func GenerateKotlin(model *il.Model, to string) {
 		output.WriteLine("override fun normalizeResponse(response: JsonObject): RecordSet {")
 		output.IndentAdd()
 		output.WriteLine("val collection = NormalizedCollection()")
-		output.WriteLine("normalize" + f.Name + "(Scope(\"ROOT_QUERY\", collection, response))")
+		output.WriteLine("normalize" + f.Name + "(Scope(null, collection, response))")
 		output.WriteLine("return collection.build()")
 		output.IndentRemove()
 		output.WriteLine("}")
 		output.IndentRemove()
 		output.WriteLine("}")
 	}
+
+	output.WriteLine("fun operationByName(name: String): OperationDefinition {")
+	output.IndentAdd()
+	for _, f := range model.Queries {
+		output.WriteLine("if (name == \"" + f.Name + "\") return " + f.Name)
+	}
+	for _, f := range model.Mutations {
+		output.WriteLine("if (name == \"" + f.Name + "\") return " + f.Name)
+	}
+	for _, f := range model.Subscriptions {
+		output.WriteLine("if (name == \"" + f.Name + "\") return " + f.Name)
+	}
+	output.WriteLine("error(\"Unknown operation: \\$name\")")
+	output.IndentRemove()
+	output.WriteLine("}")
+
 	output.IndentRemove()
 	output.WriteLine("}")
 
 	// Write result
-	err := ioutil.WriteFile(to, []byte(output.String()), 0644)
+	err := os.MkdirAll(filepath.Dir(to), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile(to, []byte(output.String()), 0644)
 	if err != nil {
 		panic(err)
 	}

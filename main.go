@@ -57,7 +57,7 @@ func main() {
 				cli.StringFlag{
 					Name:        "schema, s",
 					Usage:       "Schema path",
-					Destination: &source,
+					Destination: &schema,
 				},
 				cli.StringFlag{
 					Name:        "target, t",
