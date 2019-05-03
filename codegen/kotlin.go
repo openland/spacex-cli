@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"github.com/openland/spasex-cli/il"
+	"github.com/openland/spacex-cli/il"
 	"io/ioutil"
 	"strconv"
 	"strings"
