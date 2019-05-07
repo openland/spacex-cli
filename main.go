@@ -38,6 +38,7 @@ func main() {
 	var source string
 	var schema string
 	var target string
+	var pkg string
 	app.Commands = []cli.Command{
 		{
 			Name:    "generate",
@@ -64,6 +65,11 @@ func main() {
 					Usage:       "Generator target",
 					Destination: &target,
 				},
+				cli.StringFlag{
+					Name:        "package, p",
+					Usage:       "Package name",
+					Destination: &pkg,
+				},
 			},
 			Action: func(c *cli.Context) error {
 				if target != "kotlin" {
@@ -75,7 +81,7 @@ func main() {
 					panic(err)
 				}
 				model := il.LoadModel(schema, files)
-				codegen.GenerateKotlin(model, output)
+				codegen.GenerateKotlin(model, output, pkg)
 				return nil
 			},
 		},

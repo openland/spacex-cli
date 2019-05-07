@@ -320,11 +320,27 @@ func generateNormalizer(set *il.SelectionSet, output *Output) {
 
 func inputValue(value il.Value) string {
 	if value.GetKind() == "IntValue" {
-		return "i(" + strconv.FormatInt(int64(value.(il.IntValue).Int), 10) + ")"
+		return "intValue(" + strconv.FormatInt(int64(value.(il.IntValue).Int), 10) + ")"
 	} else if value.GetKind() == "StringValue" {
-		return "s(\"" + value.(il.StringValue).String + "\")"
+		return "stringValue(\"" + value.(il.StringValue).String + "\")"
+	} else if value.GetKind() == "EnumValue" {
+		return "stringValue(\"" + value.(il.EnumValue).String + "\")"
 	} else if value.GetKind() == "VariableValue" {
-		return "reference(\"" + value.(il.VariableValue).Name + "\")"
+		return "refValue(\"" + value.(il.VariableValue).Name + "\")"
+	} else if value.GetKind() == "ListValue" {
+		list := value.(il.ListValue)
+		inner := make([]string, 0)
+		for _, v := range list.Values {
+			inner = append(inner, inputValue(v))
+		}
+		return "listValue(" + strings.Join(inner, ",") + ")"
+	} else if value.GetKind() == "ObjectValue" {
+		obj := value.(il.ObjectValue)
+		inner := make([]string, 0)
+		for _, f := range obj.Fields {
+			inner = append(inner, "\""+f.Name+"\" to "+inputValue(f.Value))
+		}
+		return "objectValue(" + strings.Join(inner, ",") + ")"
 	}
 
 	// TODO: Implement all types
@@ -413,54 +429,54 @@ func generateSelector(set *il.SelectionSet, output *Output) {
 	output.IndentRemove()
 }
 
-func GenerateKotlin(model *il.Model, to string) {
+func GenerateKotlin(model *il.Model, to string, pgk string) {
 	output := NewOutput()
-	output.WriteLine("package com.openland.spacex.gen")
+	output.WriteLine("package " + pgk)
 	output.WriteLine("")
-	output.WriteLine("import com.openland.spacex.store.*")
-	output.WriteLine("import com.openland.spacex.model.*")
-	output.WriteLine("import kotlinx.serialization.json.JsonObject")
+	output.WriteLine("import com.openland.spacex.*")
+	output.WriteLine("import com.openland.spacex.gen.*")
+	output.WriteLine("import org.json.*")
 	output.WriteLine("")
 
 	//
 	// Normalizers
 	//
 
-	for _, f := range model.Fragments {
-		output.NextScope()
-		output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
-		output.IndentAdd()
-		generateNormalizer(f.SelectionSet, output)
-		output.IndentRemove()
-		output.WriteLine("}")
-	}
-
-	for _, f := range model.Queries {
-		output.NextScope()
-		output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
-		output.IndentAdd()
-		generateNormalizer(f.SelectionSet, output)
-		output.IndentRemove()
-		output.WriteLine("}")
-	}
-
-	for _, f := range model.Mutations {
-		output.NextScope()
-		output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
-		output.IndentAdd()
-		generateNormalizer(f.SelectionSet, output)
-		output.IndentRemove()
-		output.WriteLine("}")
-	}
-
-	for _, f := range model.Subscriptions {
-		output.NextScope()
-		output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
-		output.IndentAdd()
-		generateNormalizer(f.SelectionSet, output)
-		output.IndentRemove()
-		output.WriteLine("}")
-	}
+	//for _, f := range model.Fragments {
+	//	output.NextScope()
+	//	output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
+	//	output.IndentAdd()
+	//	generateNormalizer(f.SelectionSet, output)
+	//	output.IndentRemove()
+	//	output.WriteLine("}")
+	//}
+	//
+	//for _, f := range model.Queries {
+	//	output.NextScope()
+	//	output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
+	//	output.IndentAdd()
+	//	generateNormalizer(f.SelectionSet, output)
+	//	output.IndentRemove()
+	//	output.WriteLine("}")
+	//}
+	//
+	//for _, f := range model.Mutations {
+	//	output.NextScope()
+	//	output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
+	//	output.IndentAdd()
+	//	generateNormalizer(f.SelectionSet, output)
+	//	output.IndentRemove()
+	//	output.WriteLine("}")
+	//}
+	//
+	//for _, f := range model.Subscriptions {
+	//	output.NextScope()
+	//	output.WriteLine("fun normalize" + f.Name + "(scope" + strconv.FormatInt(output.GetScope(), 10) + ": Scope) {")
+	//	output.IndentAdd()
+	//	generateNormalizer(f.SelectionSet, output)
+	//	output.IndentRemove()
+	//	output.WriteLine("}")
+	//}
 
 	//
 	// Selectors
@@ -468,7 +484,7 @@ func GenerateKotlin(model *il.Model, to string) {
 
 	for _, f := range model.Fragments {
 		output.NextScope()
-		output.WriteLine("val " + f.Name + "Selector = ")
+		output.WriteLine("private val " + f.Name + "Selector = ")
 		output.IndentAdd()
 		generateSelector(f.SelectionSet, output)
 		output.IndentRemove()
@@ -477,7 +493,23 @@ func GenerateKotlin(model *il.Model, to string) {
 
 	for _, f := range model.Queries {
 		output.NextScope()
-		output.WriteLine("val " + f.Name + "Selector = ")
+		output.WriteLine("private val " + f.Name + "Selector = ")
+		output.IndentAdd()
+		generateSelector(f.SelectionSet, output)
+		output.IndentRemove()
+	}
+
+	for _, f := range model.Mutations {
+		output.NextScope()
+		output.WriteLine("private val " + f.Name + "Selector = ")
+		output.IndentAdd()
+		generateSelector(f.SelectionSet, output)
+		output.IndentRemove()
+	}
+
+	for _, f := range model.Subscriptions {
+		output.NextScope()
+		output.WriteLine("private val " + f.Name + "Selector = ")
 		output.IndentAdd()
 		generateSelector(f.SelectionSet, output)
 		output.IndentRemove()
@@ -497,13 +529,13 @@ func GenerateKotlin(model *il.Model, to string) {
 		output.WriteLine("override val kind = OperationKind.QUERY")
 		output.WriteLine("override val body = \"" + f.Body + "\"")
 		output.WriteLine("override val selector = " + f.Name + "Selector")
-		output.WriteLine("override fun normalizeResponse(response: JsonObject, arguments: JsonObject): RecordSet {")
-		output.IndentAdd()
-		output.WriteLine("val collection = NormalizedCollection()")
-		output.WriteLine("normalize" + f.Name + "(Scope(\"ROOT_QUERY\", collection, response, arguments))")
-		output.WriteLine("return collection.build()")
-		output.IndentRemove()
-		output.WriteLine("}")
+		//output.WriteLine("override fun normalizeResponse(response: JSONObject, arguments: JSONObject): RecordSet {")
+		//output.IndentAdd()
+		//output.WriteLine("val collection = NormalizedCollection()")
+		//output.WriteLine("normalize" + f.Name + "(Scope(\"ROOT_QUERY\", collection, response, arguments))")
+		//output.WriteLine("return collection.build()")
+		//output.IndentRemove()
+		//output.WriteLine("}")
 		output.IndentRemove()
 		output.WriteLine("}")
 	}
@@ -513,14 +545,14 @@ func GenerateKotlin(model *il.Model, to string) {
 		output.WriteLine("override val name = \"" + f.Name + "\"")
 		output.WriteLine("override val kind = OperationKind.MUTATION")
 		output.WriteLine("override val body = \"" + f.Body + "\"")
-		output.WriteLine("override val selector = null")
-		output.WriteLine("override fun normalizeResponse(response: JsonObject, arguments: JsonObject): RecordSet {")
-		output.IndentAdd()
-		output.WriteLine("val collection = NormalizedCollection()")
-		output.WriteLine("normalize" + f.Name + "(Scope(null, collection, response, arguments))")
-		output.WriteLine("return collection.build()")
-		output.IndentRemove()
-		output.WriteLine("}")
+		output.WriteLine("override val selector = " + f.Name + "Selector")
+		//output.WriteLine("override fun normalizeResponse(response: JSONObject, arguments: JSONObject): RecordSet {")
+		//output.IndentAdd()
+		//output.WriteLine("val collection = NormalizedCollection()")
+		//output.WriteLine("normalize" + f.Name + "(Scope(null, collection, response, arguments))")
+		//output.WriteLine("return collection.build()")
+		//output.IndentRemove()
+		//output.WriteLine("}")
 		output.IndentRemove()
 		output.WriteLine("}")
 	}
@@ -530,14 +562,14 @@ func GenerateKotlin(model *il.Model, to string) {
 		output.WriteLine("override val name = \"" + f.Name + "\"")
 		output.WriteLine("override val kind = OperationKind.SUBSCRIPTION")
 		output.WriteLine("override val body = \"" + f.Body + "\"")
-		output.WriteLine("override val selector = null")
-		output.WriteLine("override fun normalizeResponse(response: JsonObject, arguments: JsonObject): RecordSet {")
-		output.IndentAdd()
-		output.WriteLine("val collection = NormalizedCollection()")
-		output.WriteLine("normalize" + f.Name + "(Scope(null, collection, response, arguments))")
-		output.WriteLine("return collection.build()")
-		output.IndentRemove()
-		output.WriteLine("}")
+		output.WriteLine("override val selector = " + f.Name + "Selector")
+		//output.WriteLine("override fun normalizeResponse(response: JSONObject, arguments: JSONObject): RecordSet {")
+		//output.IndentAdd()
+		//output.WriteLine("val collection = NormalizedCollection()")
+		//output.WriteLine("normalize" + f.Name + "(Scope(null, collection, response, arguments))")
+		//output.WriteLine("return collection.build()")
+		//output.IndentRemove()
+		//output.WriteLine("}")
 		output.IndentRemove()
 		output.WriteLine("}")
 	}

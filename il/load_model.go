@@ -418,6 +418,10 @@ func convertSelection(typeName string, selection *ast.SelectionSet, model *Model
 		} else if ss.GetKind() == "InlineFragment" {
 			fs := ss.(*ast.InlineFragment)
 			fr := convertSelection(fs.TypeCondition.Name.Value, fs.SelectionSet, model, clModel)
+			tp := Find(clModel.Schema.Types,fs.TypeCondition.Name.Value)
+			if tp.Kind != "OBJECT" {
+				panic("Inline fragments are possible only on explicit types")
+			}
 			ifr := &InlineFragment{
 				TypeName:  fs.TypeCondition.Name.Value,
 				Selection: fr,
