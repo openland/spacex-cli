@@ -169,7 +169,6 @@ func prepareOperation(definition *ast.OperationDefinition, model *Model, clModel
 	for _, d := range dependencies {
 		body = body + " " + clModel.Sources[d]
 	}
-	body = strings.Replace(body, "$", "\\$", -1)
 	body = strings.Replace(body, "\n", " ", -1)
 	for strings.Contains(body, "  ") {
 		body = strings.Replace(body, "  ", " ", -1)

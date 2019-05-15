@@ -72,8 +72,8 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if target != "kotlin" {
-					log.Panic("Only kotlin target is supported")
+				if target != "kotlin" && target != "swift" {
+					log.Panic("Only kotlin or swift target is supported")
 				}
 
 				files, err := collectFiles(source)
@@ -81,7 +81,11 @@ func main() {
 					panic(err)
 				}
 				model := il.LoadModel(schema, files)
-				codegen.GenerateKotlin(model, output, pkg)
+				if target == "kotlin" {
+					codegen.GenerateKotlin(model, output, pkg)
+				} else if target == "swift" {
+					codegen.GenerateSwift(model, output)
+				}
 				return nil
 			},
 		},
