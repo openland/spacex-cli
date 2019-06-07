@@ -1,12 +1,13 @@
 package codegen
 
 import (
-	"github.com/openland/spacex-cli/il"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/openland/spacex-cli/il"
 )
 
 func inputValue(value il.Value) string {
@@ -14,6 +15,8 @@ func inputValue(value il.Value) string {
 		return "intValue(" + strconv.FormatInt(int64(value.(il.IntValue).Int), 10) + ")"
 	} else if value.GetKind() == "StringValue" {
 		return "stringValue(\"" + value.(il.StringValue).String + "\")"
+	} else if value.GetKind() == "BooleanValue" {
+		return "boolValue(" + strconv.FormatBool(value.(il.BooleanValue).Boolean) + ")"
 	} else if value.GetKind() == "EnumValue" {
 		return "stringValue(\"" + value.(il.EnumValue).String + "\")"
 	} else if value.GetKind() == "VariableValue" {
