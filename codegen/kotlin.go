@@ -145,6 +145,7 @@ func fileHeader(output *Output, pkg string) {
 
 func GenerateKotlin(model *il.Model, to string, pkg string) {
 
+	os.RemoveAll(to + "/operations")
 	//
 	// Selectors
 	//
@@ -158,7 +159,7 @@ func GenerateKotlin(model *il.Model, to string, pkg string) {
 		output.IndentRemove()
 		output.WriteLine("")
 	}
-	write(output, strings.Replace(to, ".kt", "", -1)+"_Fragments"+".kt")
+	write(output, to+"/operations/Fragments.kt")
 
 	for _, f := range model.Queries {
 		output = NewOutput()
@@ -179,7 +180,7 @@ func GenerateKotlin(model *il.Model, to string, pkg string) {
 		output.IndentRemove()
 		output.WriteLine("}")
 
-		write(output, strings.Replace(to, ".kt", "", -1)+"_Q_"+f.Name+".kt")
+		write(output, to+"/operations/queries/"+f.Name+".kt")
 	}
 
 	for _, f := range model.Mutations {
@@ -201,7 +202,7 @@ func GenerateKotlin(model *il.Model, to string, pkg string) {
 		output.IndentRemove()
 		output.WriteLine("}")
 
-		write(output, strings.Replace(to, ".kt", "", -1)+"_M_"+f.Name+".kt")
+		write(output, to+"/operations/mutations/"+f.Name+".kt")
 	}
 
 	for _, f := range model.Subscriptions {
@@ -223,7 +224,7 @@ func GenerateKotlin(model *il.Model, to string, pkg string) {
 		output.IndentRemove()
 		output.WriteLine("}")
 
-		write(output, strings.Replace(to, ".kt", "", -1)+"_S_"+f.Name+".kt")
+		write(output, to+"/operations/subscriptions/"+f.Name+".kt")
 	}
 
 	output = NewOutput()
@@ -256,5 +257,5 @@ func GenerateKotlin(model *il.Model, to string, pkg string) {
 	output.IndentRemove()
 	output.WriteLine("}")
 
-	write(output, to)
+	write(output, to+"/Operations.kt")
 }
