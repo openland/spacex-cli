@@ -122,60 +122,54 @@ func generateSelector(set *il.SelectionSet, output *Output) {
 	output.IndentRemove()
 }
 
-func GenerateKotlin(model *il.Model, to string, pgk string) {
-	output := NewOutput()
-	output.WriteLine("package " + pgk)
+func write(output *Output, to string) {
+	// Write result
+	err := os.MkdirAll(filepath.Dir(to), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile(to, []byte(output.String()), 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func fileHeader(output *Output, pkg string) {
+	output.WriteLine("package " + pkg)
 	output.WriteLine("")
 	output.WriteLine("import com.openland.spacex.*")
 	output.WriteLine("import com.openland.spacex.gen.*")
 	output.WriteLine("import org.json.*")
 	output.WriteLine("")
+}
+
+func GenerateKotlin(model *il.Model, to string, pkg string) {
 
 	//
 	// Selectors
 	//
-
+	output := NewOutput()
+	fileHeader(output, pkg)
 	for _, f := range model.Fragments {
 		output.NextScope()
-		output.WriteLine("private val " + f.Name + "Selector = ")
+		output.WriteLine("internal val " + f.Name + "Selector = ")
 		output.IndentAdd()
 		generateSelector(f.SelectionSet, output)
 		output.IndentRemove()
 		output.WriteLine("")
 	}
+	write(output, strings.Replace(to, ".kt", "", -1)+"_Fragments"+".kt")
 
 	for _, f := range model.Queries {
+		output = NewOutput()
+		fileHeader(output, pkg)
+
 		output.NextScope()
-		output.WriteLine("private val " + f.Name + "Selector = ")
+		output.WriteLine("internal val " + f.Name + "Selector = ")
 		output.IndentAdd()
 		generateSelector(f.SelectionSet, output)
 		output.IndentRemove()
-	}
 
-	for _, f := range model.Mutations {
-		output.NextScope()
-		output.WriteLine("private val " + f.Name + "Selector = ")
-		output.IndentAdd()
-		generateSelector(f.SelectionSet, output)
-		output.IndentRemove()
-	}
-
-	for _, f := range model.Subscriptions {
-		output.NextScope()
-		output.WriteLine("private val " + f.Name + "Selector = ")
-		output.IndentAdd()
-		generateSelector(f.SelectionSet, output)
-		output.IndentRemove()
-	}
-
-	//
-	// Operations
-	//
-
-	output.WriteLine("")
-	output.WriteLine("object Operations {")
-	output.IndentAdd()
-	for _, f := range model.Queries {
 		output.WriteLine("val " + f.Name + " = object: OperationDefinition {")
 		output.IndentAdd()
 		output.WriteLine("override val name = \"" + f.Name + "\"")
@@ -184,8 +178,20 @@ func GenerateKotlin(model *il.Model, to string, pgk string) {
 		output.WriteLine("override val selector = " + f.Name + "Selector")
 		output.IndentRemove()
 		output.WriteLine("}")
+
+		write(output, strings.Replace(to, ".kt", "", -1)+"_Q_"+f.Name+".kt")
 	}
+
 	for _, f := range model.Mutations {
+		output = NewOutput()
+		fileHeader(output, pkg)
+
+		output.NextScope()
+		output.WriteLine("internal val " + f.Name + "Selector = ")
+		output.IndentAdd()
+		generateSelector(f.SelectionSet, output)
+		output.IndentRemove()
+
 		output.WriteLine("val " + f.Name + " = object: OperationDefinition {")
 		output.IndentAdd()
 		output.WriteLine("override val name = \"" + f.Name + "\"")
@@ -194,8 +200,19 @@ func GenerateKotlin(model *il.Model, to string, pgk string) {
 		output.WriteLine("override val selector = " + f.Name + "Selector")
 		output.IndentRemove()
 		output.WriteLine("}")
+
+		write(output, strings.Replace(to, ".kt", "", -1)+"_M_"+f.Name+".kt")
 	}
+
 	for _, f := range model.Subscriptions {
+		output = NewOutput()
+		fileHeader(output, pkg)
+
+		output.NextScope()
+		output.WriteLine("internal val " + f.Name + "Selector = ")
+		output.IndentAdd()
+		generateSelector(f.SelectionSet, output)
+		output.IndentRemove()
 
 		output.WriteLine("val " + f.Name + " = object: OperationDefinition {")
 		output.IndentAdd()
@@ -205,7 +222,21 @@ func GenerateKotlin(model *il.Model, to string, pgk string) {
 		output.WriteLine("override val selector = " + f.Name + "Selector")
 		output.IndentRemove()
 		output.WriteLine("}")
+
+		write(output, strings.Replace(to, ".kt", "", -1)+"_S_"+f.Name+".kt")
 	}
+
+	output = NewOutput()
+	output.WriteLine("package " + pkg)
+	output.WriteLine("")
+	output.WriteLine("import com.openland.spacex.*")
+	output.WriteLine("import com.openland.spacex.gen.*")
+	output.WriteLine("import org.json.*")
+	output.WriteLine("")
+
+	output.WriteLine("")
+	output.WriteLine("object Operations {")
+	output.IndentAdd()
 
 	output.WriteLine("fun operationByName(name: String): OperationDefinition {")
 	output.IndentAdd()
@@ -225,13 +256,5 @@ func GenerateKotlin(model *il.Model, to string, pgk string) {
 	output.IndentRemove()
 	output.WriteLine("}")
 
-	// Write result
-	err := os.MkdirAll(filepath.Dir(to), os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-	err = ioutil.WriteFile(to, []byte(output.String()), 0644)
-	if err != nil {
-		panic(err)
-	}
+	write(output, to)
 }
