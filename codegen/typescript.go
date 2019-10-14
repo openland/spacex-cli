@@ -10,6 +10,14 @@ import (
 func GenerateTypescript(model *il.Model, to string) {
 	output := NewOutput()
 
+	setComma("'")
+	setArgFunc("args")
+	setNeedSemicolon(true)
+	setExplicitArgs(true)
+
+	output.WriteLine("import { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue } from 'openland-graphql/spacex/types';")
+	output.WriteLine("")
+
 	for _, f := range model.Fragments {
 		output.NextScope()
 		output.WriteLine("const " + f.Name + "Selector = ")
@@ -50,7 +58,8 @@ func GenerateTypescript(model *il.Model, to string) {
 		output.IndentAdd()
 		output.WriteLine("type: 'query',")
 		output.WriteLine("name: '" + f.Name + "',")
-		output.WriteLine("body: '" + f.Body + "'")
+		output.WriteLine("body: '" + f.Body + "',")
+		output.WriteLine("selector: " + f.Name + "Selector")
 		output.IndentRemove()
 		output.WriteLine("},")
 	}
@@ -59,7 +68,8 @@ func GenerateTypescript(model *il.Model, to string) {
 		output.IndentAdd()
 		output.WriteLine("type: 'mutation',")
 		output.WriteLine("name: '" + f.Name + "',")
-		output.WriteLine("body: '" + f.Body + "'")
+		output.WriteLine("body: '" + f.Body + "',")
+		output.WriteLine("selector: " + f.Name + "Selector")
 		output.IndentRemove()
 		output.WriteLine("},")
 	}
@@ -68,7 +78,8 @@ func GenerateTypescript(model *il.Model, to string) {
 		output.IndentAdd()
 		output.WriteLine("type: 'subscription',")
 		output.WriteLine("name: '" + f.Name + "',")
-		output.WriteLine("body: '" + f.Body + "'")
+		output.WriteLine("body: '" + f.Body + "',")
+		output.WriteLine("selector: " + f.Name + "Selector")
 		output.IndentRemove()
 		output.WriteLine("},")
 	}
