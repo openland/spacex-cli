@@ -72,7 +72,7 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if target != "kotlin" && target != "swift" {
+				if target != "kotlin" && target != "swift" && target != "typescript" {
 					log.Panic("Only kotlin or swift target is supported")
 				}
 
@@ -85,6 +85,8 @@ func main() {
 					codegen.GenerateKotlin(model, output, pkg)
 				} else if target == "swift" {
 					codegen.GenerateSwift(model, output)
+				} else if target == "typescript" {
+					codegen.GenerateTypescript(model, output)
 				}
 				return nil
 			},
