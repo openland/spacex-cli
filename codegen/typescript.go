@@ -15,6 +15,7 @@ func GenerateTypescript(model *il.Model, to string) {
 	setNeedSemicolon(true)
 	setExplicitArgs(true)
 
+	output.WriteLine("// @ts-ignore")
 	output.WriteLine("import { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue } from 'openland-graphql/spacex/types';")
 	output.WriteLine("")
 
