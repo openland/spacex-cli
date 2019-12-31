@@ -16,7 +16,7 @@ func GenerateTypescript(model *il.Model, to string) {
 	setExplicitArgs(true)
 
 	output.WriteLine("// @ts-ignore")
-	output.WriteLine("import { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue } from 'openland-graphql/spacex/types';")
+	output.WriteLine("import { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue, OperationDefinition } from 'openland-graphql/spacex/types';")
 	output.WriteLine("")
 
 	for _, f := range model.Fragments {
@@ -52,12 +52,12 @@ func GenerateTypescript(model *il.Model, to string) {
 		output.IndentRemove()
 	}
 
-	output.WriteLine("export const Operations = {")
+	output.WriteLine("export const Operations: { [key: string]: OperationDefinition } = {")
 	output.IndentAdd()
 	for _, f := range model.Queries {
 		output.WriteLine("" + f.Name + ": {")
 		output.IndentAdd()
-		output.WriteLine("type: 'query',")
+		output.WriteLine("kind: 'query',")
 		output.WriteLine("name: '" + f.Name + "',")
 		output.WriteLine("body: '" + f.Body + "',")
 		output.WriteLine("selector: " + f.Name + "Selector")
@@ -67,7 +67,7 @@ func GenerateTypescript(model *il.Model, to string) {
 	for _, f := range model.Mutations {
 		output.WriteLine("" + f.Name + ": {")
 		output.IndentAdd()
-		output.WriteLine("type: 'mutation',")
+		output.WriteLine("kind: 'mutation',")
 		output.WriteLine("name: '" + f.Name + "',")
 		output.WriteLine("body: '" + f.Body + "',")
 		output.WriteLine("selector: " + f.Name + "Selector")
@@ -77,7 +77,7 @@ func GenerateTypescript(model *il.Model, to string) {
 	for _, f := range model.Subscriptions {
 		output.WriteLine("" + f.Name + ": {")
 		output.IndentAdd()
-		output.WriteLine("type: 'subscription',")
+		output.WriteLine("kind: 'subscription',")
 		output.WriteLine("name: '" + f.Name + "',")
 		output.WriteLine("body: '" + f.Body + "',")
 		output.WriteLine("selector: " + f.Name + "Selector")
