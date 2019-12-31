@@ -8,3 +8,6 @@ spacex-cli generate --queries ./queries/ --schema ./schema.json --target kotlin 
 spacex-cli generate --queries ./queries/ --schema ./schema.json --target swift -output ./ios/Operations.swift
 spacex-cli generate --queries ./queries/ --schema ./schema.json --target typescript -output ./Operations.ts
 ```
+
+## License
+MIT (c) Data Makes Perfect LLC
