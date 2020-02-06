@@ -2,7 +2,7 @@
 /* eslint-disable */
 type Maybe<T> = T | null;
 type MaybeInput<T> = T | null | undefined;
-type Inline<V> = {} | V;
+type Inline<V extends { __typename: string }> =  V extends {__typename:V['__typename']} ? V : never;
 
 // Enums
 export enum DeviceKind {
@@ -23,7 +23,7 @@ export interface ImageRef {
 
 // Fragments
 export type DeviceNano = (
-    & { __typename: 'Lamp' | 'Switch' | 'Lock' | string }
+    & { __typename: 'Lamp' | 'Switch' | 'Lock' }
     & { id: string}
 );
 export type LampShort = (
@@ -34,7 +34,7 @@ export type LampShort = (
     & { maxBrightness: number}
 );
 export type DeviceShort = (
-    & { __typename: 'Lamp' | 'Switch' | 'Lock' | string }
+    & { __typename: 'Lamp' | 'Switch' | 'Lock' }
     & { description: Maybe<string>}
     & { addedBy: (
         & { __typename: 'User' }
@@ -64,13 +64,13 @@ export type UserShort = (
 
 // Queries
 export type DiscoverDevices = (
-    & { discover: [(
+    & { discover: ((
         & { __typename: 'DiscoveredThing' }
         & { id: string}
         & { name: string}
         & { host: string}
         & { port: number}
-    )]}
+    ))[]}
 );
 
 // Mutations
@@ -90,7 +90,7 @@ export interface UpdateDeviceDescriptionVariables {
 }
 export type UpdateDeviceDescription = (
     & { updateDeviceDescription: (
-        & { __typename: 'Lamp' | 'Switch' | 'Lock' | string }
+        & { __typename: 'Lamp' | 'Switch' | 'Lock' }
         & DeviceShort
     )}
 );
