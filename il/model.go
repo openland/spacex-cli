@@ -8,10 +8,25 @@ type Model struct {
 	Queries       []*Operation
 	Mutations     []*Operation
 	Subscriptions []*Operation
+	Enums         []*EnumType
+	Unions        []*UnionType
+	Interfaces    []*InterfaceType
+	InputTypes    []*InputType
+	Schema        *Schema
 }
 
 func NewModel() *Model {
-	return &Model{Fragments: make([]*Fragment, 0), FragmentsMap: make(map[string]*Fragment), Queries: make([]*Operation, 0), Mutations: make([]*Operation, 0), Subscriptions: make([]*Operation, 0)}
+	return &Model{
+		Fragments:     make([]*Fragment, 0),
+		FragmentsMap:  make(map[string]*Fragment),
+		Queries:       make([]*Operation, 0),
+		Mutations:     make([]*Operation, 0),
+		Subscriptions: make([]*Operation, 0),
+		Enums:         make([]*EnumType, 0),
+		Unions:        make([]*UnionType, 0),
+		Interfaces:    make([]*InterfaceType, 0),
+		InputTypes:    make([]*InputType, 0),
+	}
 }
 
 // Fragments
@@ -25,7 +40,13 @@ type Fragment struct {
 }
 
 func NewFragment(name string, typeName string) *Fragment {
-	return &Fragment{Name: name, TypeName: typeName, SelectionSet: nil, Uses: make([]*Fragment, 0), UsedBy: make([]*Fragment, 0)}
+	return &Fragment{
+		Name:         name,
+		TypeName:     typeName,
+		SelectionSet: nil,
+		Uses:         make([]*Fragment, 0),
+		UsedBy:       make([]*Fragment, 0),
+	}
 }
 
 type InlineFragment struct {
@@ -73,4 +94,33 @@ type Variable struct {
 type Argument struct {
 	Name  string
 	Value Value
+}
+
+// Enums
+type EnumType struct {
+	Name   string
+	Values []string
+}
+
+// Unions
+type UnionType struct {
+	Name   string
+	Values []string
+}
+
+// Interfaces
+type InterfaceType struct {
+	Name   string
+	Values []string
+}
+
+// Input Types
+type InputType struct {
+	Name   string
+	Fields []InputTypeField
+}
+
+type InputTypeField struct {
+	Name string
+	Type Type
 }

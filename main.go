@@ -72,27 +72,36 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if target != "kotlin" && target != "swift" && target != "typescript" {
-					log.Panic("Only kotlin or swift target is supported")
+				if target != "kotlin" && target != "swift" && target != "typescript" && target != "client" {
+					log.Panic("Only kotlin, swift, typescript or client target is supported")
 				}
 
-				files, err := collectFiles(source)
+				sourcePath, err := filepath.Abs(source)
 				if err != nil {
 					panic(err)
 				}
-				model := il.LoadModel(schema, files)
+				schemaPath, err := filepath.Abs(schema)
+				if err != nil {
+					panic(err)
+				}
+				files, err := collectFiles(sourcePath)
+				if err != nil {
+					panic(err)
+				}
+				model := il.LoadModel(schemaPath, files)
 				if target == "kotlin" {
 					codegen.GenerateKotlin(model, output, pkg)
 				} else if target == "swift" {
 					codegen.GenerateSwift(model, output)
 				} else if target == "typescript" {
 					codegen.GenerateTypescript(model, output)
+				} else if target == "client" {
+					codegen.GenerateClient(model, output)
 				}
 				return nil
 			},
 		},
 	}
-
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)

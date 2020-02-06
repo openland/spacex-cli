@@ -1,0 +1,60 @@
+query DiscoverDevices {
+    discover {
+        id
+        name
+        host
+        port
+    }
+}
+
+mutation UpdateDeviceDescription($id: ID!, $description: DeviceDescription!) {
+    updateDeviceDescription(id: $id, description: $description) {
+        ...DeviceShort
+    }
+}
+
+mutation AddUser($username: String!, $password: String!) {
+    addUser(username: $username, password: $password) {
+        ...UserShort
+    }
+}
+
+fragment UserShort on User {
+    __typename
+    id
+}
+
+fragment LampShort on Lamp {
+    __typename
+    id
+    brightness
+    minBrightness
+    maxBrightness
+}
+
+fragment DeviceNano on Device {
+    __typename
+    id
+}
+
+fragment DeviceShort on Device {
+    __typename
+    description
+    addedBy {
+        __typename
+        id
+        username
+    }
+    ...DeviceNano
+    ... on Lamp {
+        ...LampShort
+    }
+    ... on Switch {
+        id
+        numberOfButtons
+    }
+    ... on Lamp {
+        id
+        brightness
+    }
+}

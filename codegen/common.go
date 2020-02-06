@@ -142,3 +142,48 @@ func generateSelector(set *il.SelectionSet, output *Output) {
 	outputSelectors(set, output, true)
 	output.IndentRemove()
 }
+
+func isPolymorphic(typename string, model *il.Model) bool {
+	tp := findType(typename, model)
+	if tp.Kind == "UNION" || tp.Kind == "INTERFACE" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func findSubtypes(typename string, model *il.Model) []string {
+	tp := findType(typename, model)
+	if tp.Kind == "UNION" {
+		res := make([]string, 0)
+		for _, u := range model.Unions {
+			if u.Name == typename {
+				for _, c := range u.Values {
+					res = append(res, c)
+				}
+			}
+		}
+		return res
+	} else if tp.Kind == "INTERFACE" {
+		res := make([]string, 0)
+		for _, u := range model.Interfaces {
+			if u.Name == typename {
+				for _, c := range u.Values {
+					res = append(res, c)
+				}
+			}
+		}
+		return res
+	} else {
+		panic("Invalid kind: " + tp.Kind)
+	}
+}
+
+func findType(name string, model *il.Model) *il.SchemaType {
+	for _, u := range model.Schema.Types {
+		if u.Name == name {
+			return &u
+		}
+	}
+	panic("Unable to find type " + name)
+}

@@ -21,10 +21,22 @@ type ClientModel struct {
 }
 
 type SchemaType struct {
-	Kind   string         `json:"kind"`
-	Name   string         `json:"name"`
-	Fields []*SchemaField `json:"fields"`
-	OfType *SchemaType    `json:"ofType"`
+	Kind          string             `json:"kind"`
+	Name          string             `json:"name"`
+	Fields        []*SchemaField     `json:"fields"`
+	OfType        *SchemaType        `json:"ofType"`
+	EnumValues    []*SchemaEnumValue `json:"enumValues"`
+	PossibleTypes []*SchemaType      `json:"possibleTypes"`
+	InputFields   []*InputField      `json:"inputFields"`
+}
+
+type InputField struct {
+	Name string     `json:"name"`
+	Type SchemaType `json:"type"`
+}
+
+type SchemaEnumValue struct {
+	Name string `json:"name"`
 }
 
 type SchemaField struct {
@@ -272,7 +284,7 @@ func Find(a []SchemaType, name string) *SchemaType {
 			return &a[i]
 		}
 	}
-	return nil
+	panic("Unknown type: " + name)
 }
 
 func FindField(a []*SchemaField, name string) *SchemaField {
@@ -306,6 +318,29 @@ func convertType(field *ast.Field, ff SchemaType, model *Model, clModel *ClientM
 	} else if ff.Kind == "ENUM" {
 		// Enum
 		return Enum{ff.Name}
+	} else {
+		panic("Unexpected type kind: " + ff.Kind)
+	}
+}
+
+func convertInputType2(ff SchemaType, model *Model, clModel *ClientModel) Type {
+	if ff.Kind == "NON_NULL" {
+		return NotNull{convertInputType2(*ff.OfType, model, clModel)}
+	} else if ff.Kind == "SCALAR" {
+		return Scalar{ff.Name}
+	} else if ff.Kind == "OBJECT" {
+		panic("Can't convert object for input")
+	} else if ff.Kind == "UNION" {
+		panic("Can't convert object for input")
+	} else if ff.Kind == "LIST" {
+		// List
+		return List{convertInputType2(*ff.OfType, model, clModel)}
+	} else if ff.Kind == "INTERFACE" {
+		panic("Can't convert object for input")
+	} else if ff.Kind == "ENUM" {
+		return Enum{ff.Name}
+	} else if ff.Kind == "INPUT_OBJECT" {
+		return Input{ff.Name}
 	} else {
 		panic("Unexpected type kind: " + ff.Kind)
 	}
@@ -417,7 +452,7 @@ func convertSelection(typeName string, selection *ast.SelectionSet, model *Model
 		} else if ss.GetKind() == "InlineFragment" {
 			fs := ss.(*ast.InlineFragment)
 			fr := convertSelection(fs.TypeCondition.Name.Value, fs.SelectionSet, model, clModel)
-			tp := Find(clModel.Schema.Types,fs.TypeCondition.Name.Value)
+			tp := Find(clModel.Schema.Types, fs.TypeCondition.Name.Value)
 			if tp.Kind != "OBJECT" {
 				panic("Inline fragments are possible only on explicit types")
 			}
@@ -494,6 +529,7 @@ func LoadModel(schemaPath string, files []string) *Model {
 
 	// Build IL model
 	ilModel := NewModel()
+	ilModel.Schema = &schema
 
 	// Fragments
 	keys := make([]string, 0)
@@ -538,5 +574,54 @@ func LoadModel(schemaPath string, files []string) *Model {
 		v := model.Subscriptions[k]
 		prepareOperation(v, ilModel, model)
 	}
+
+	// Enums
+	for _, e := range model.Schema.Types {
+		if e.Kind == "ENUM" && !strings.HasPrefix(e.Name, "__") {
+			values := make([]string, 0)
+			for _, v := range e.EnumValues {
+				values = append(values, v.Name)
+			}
+			ilModel.Enums = append(ilModel.Enums, &EnumType{Name: e.Name, Values: values})
+		}
+	}
+
+	// Unions
+	for _, e := range model.Schema.Types {
+		if e.Kind == "UNION" && !strings.HasPrefix(e.Name, "__") {
+			values := make([]string, 0)
+			for _, p := range e.PossibleTypes {
+				if p.Kind != "OBJECT" {
+					panic("Unions of unions are not supported yet")
+				}
+				values = append(values, p.Name)
+			}
+			ilModel.Unions = append(ilModel.Unions, &UnionType{Name: e.Name, Values: values})
+		}
+	}
+
+	for _, e := range model.Schema.Types {
+		if e.Kind == "INTERFACE" && !strings.HasPrefix(e.Name, "__") {
+			values := make([]string, 0)
+			for _, p := range e.PossibleTypes {
+				if p.Kind != "OBJECT" {
+					panic("Interface of interfaces are not supported yet")
+				}
+				values = append(values, p.Name)
+			}
+			ilModel.Interfaces = append(ilModel.Interfaces, &InterfaceType{Name: e.Name, Values: values})
+		}
+	}
+
+	for _, e := range model.Schema.Types {
+		if e.Kind == "INPUT_OBJECT" && !strings.HasPrefix(e.Name, "__") {
+			fields := make([]InputTypeField, 0)
+			for _, v := range e.InputFields {
+				fields = append(fields, InputTypeField{Name: v.Name, Type: convertInputType2(v.Type, ilModel, model)})
+			}
+			ilModel.InputTypes = append(ilModel.InputTypes, &InputType{Name: e.Name, Fields: fields})
+		}
+	}
+
 	return ilModel
 }
