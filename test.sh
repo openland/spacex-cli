@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 # Schema
 cd test_data && graphql-codegen --config codegen.yml && cd ..
 # Build

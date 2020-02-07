@@ -1,0 +1,10 @@
+{
+  "name": "@openland/spacex-cli",
+  "version": "1.0.4",
+  "repository": "https://github.com/openland/spacex-cli.git",
+  "author": "Steve Korshakov <steve@openland.com>",
+  "license": "MIT",
+  "bin": {
+    "spacex": "./bin/spacex-cli"
+  }
+}

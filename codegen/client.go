@@ -86,7 +86,7 @@ func generateOutputType(tp il.Type, notNull bool, output *Output, model *il.Mode
 	}
 }
 
-func generateClientSelector(set *il.SelectionSet, output *Output, model *il.Model) {
+func generateClientSelector(set *il.SelectionSet, output *Output, model *il.Model, parentType *string) {
 	processed := make(map[string]string)
 	processed["__typename"] = "__typename"
 	for _, sf := range set.Fields {
@@ -101,7 +101,21 @@ func generateClientSelector(set *il.SelectionSet, output *Output, model *il.Mode
 		output.WriteLine("& " + sf.Name)
 	}
 	for _, sf := range set.InlineFragments {
-		output.WriteLine("& Inline<(")
+		if isPolymorphic(sf.TypeName, model) {
+			panic("Inline polymorphic fragments are not supported")
+		}
+
+		s := make([]string, 0)
+		for _, r := range findSubtypes(*parentType, model) {
+			if r != sf.TypeName {
+				s = append(s, "'"+r+"'")
+			}
+		}
+		if len(s) == 0 {
+			s = append(s, "never")
+		}
+
+		output.WriteLine("& Inline<" + strings.Join(s, " | ") + ",(")
 		output.IndentAdd()
 		generateSelectorTyped(sf.TypeName, sf.Selection, output, model)
 		output.IndentRemove()
@@ -121,7 +135,7 @@ func generateSelectorTyped(typename string, set *il.SelectionSet, output *Output
 	} else {
 		output.WriteLine("& { __typename: '" + typename + "' }")
 	}
-	generateClientSelector(set, output, model)
+	generateClientSelector(set, output, model, &typename)
 }
 
 //
@@ -222,7 +236,7 @@ func generateOperation(t *il.Operation, output *Output, model *il.Model) {
 
 	output.WriteLine("export type " + t.Name + " = (")
 	output.IndentAdd()
-	generateClientSelector(t.SelectionSet, output, model)
+	generateClientSelector(t.SelectionSet, output, model, nil)
 	output.IndentRemove()
 	output.WriteLine(");")
 }
@@ -237,7 +251,7 @@ func GenerateClient(model *il.Model, to string) {
 	output.WriteLine("/* eslint-disable */")
 	output.WriteLine("type Maybe<T> = T | null;")
 	output.WriteLine("type MaybeInput<T> = T | null | undefined;")
-	output.WriteLine("type Inline<V extends { __typename: string }> =  V extends {__typename:V['__typename']} ? V : never;")
+	output.WriteLine("type Inline<E, V> =  { __typename: E; } | V")
 	output.WriteLine("")
 	output.WriteLine("// Enums")
 	for _, f := range model.Enums {

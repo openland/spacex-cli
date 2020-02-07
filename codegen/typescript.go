@@ -16,7 +16,8 @@ func GenerateTypescript(model *il.Model, to string) {
 	setExplicitArgs(true)
 
 	output.WriteLine("// @ts-ignore")
-	output.WriteLine("import { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue, OperationDefinition } from 'openland-graphql/spacex/types';")
+	output.WriteLine("import { WebDefinitions, OperationDefinition, Definitions as AllDefinitions } from '@openland/spacex';")
+	output.WriteLine("const { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue } = WebDefinitions;")
 	output.WriteLine("")
 
 	for _, f := range model.Fragments {
@@ -85,7 +86,9 @@ func GenerateTypescript(model *il.Model, to string) {
 		output.WriteLine("},")
 	}
 	output.IndentRemove()
-	output.WriteLine("};");
+	output.WriteLine("};")
+
+	output.WriteLine("export const Definitions: AllDefinitions = { operations: Operations };")
 
 	// Write result
 	err := os.MkdirAll(filepath.Dir(to), os.ModePerm)

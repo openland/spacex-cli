@@ -2,7 +2,7 @@
 /* eslint-disable */
 type Maybe<T> = T | null;
 type MaybeInput<T> = T | null | undefined;
-type Inline<V extends { __typename: string }> =  V extends {__typename:V['__typename']} ? V : never;
+type Inline<E, V> =  { __typename: E; } | V
 
 // Enums
 export enum DeviceKind {
@@ -42,16 +42,16 @@ export type DeviceShort = (
         & { username: string}
     )}
     & DeviceNano
-    & Inline<(
+    & Inline<'Switch' | 'Lock',(
         & { __typename: 'Lamp' }
         & LampShort
     )>
-    & Inline<(
+    & Inline<'Lamp' | 'Lock',(
         & { __typename: 'Switch' }
         & { id: string}
         & { numberOfButtons: Maybe<number>}
     )>
-    & Inline<(
+    & Inline<'Switch' | 'Lock',(
         & { __typename: 'Lamp' }
         & { id: string}
         & { brightness: number}

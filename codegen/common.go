@@ -174,6 +174,10 @@ func findSubtypes(typename string, model *il.Model) []string {
 			}
 		}
 		return res
+	} else if tp.Kind == "OBJECT" {
+		res := make([]string, 0)
+		res = append(res, typename)
+		return res
 	} else {
 		panic("Invalid kind: " + tp.Kind)
 	}
