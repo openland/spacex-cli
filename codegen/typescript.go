@@ -15,8 +15,11 @@ func GenerateTypescript(model *il.Model, to string) {
 	setNeedSemicolon(true)
 	setExplicitArgs(true)
 
+	output.WriteLine("/* tslint:disable */")
+	output.WriteLine("/* eslint-disable */")
 	output.WriteLine("// @ts-ignore")
 	output.WriteLine("import { WebDefinitions, OperationDefinition, Definitions as AllDefinitions } from '@openland/spacex';")
+	output.WriteLine("// @ts-ignore")
 	output.WriteLine("const { list, notNull, scalar, field, obj, inline, fragment, args, fieldValue, refValue, intValue, floatValue, stringValue, boolValue, listValue, objectValue } = WebDefinitions;")
 	output.WriteLine("")
 
