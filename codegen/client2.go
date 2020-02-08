@@ -73,16 +73,16 @@ func GenerateClient2(model *il.Model, name string, to string) {
 	for _, q := range model.Queries {
 		if len(q.Variables.Variables) > 0 {
 			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts: SpaceQueryWatchParameters & { suspense: false }): Types." + q.Name + " | null;")
-			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts: SpaceQueryWatchParameters): Types." + q.Name + ";")
-			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
+			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts?: SpaceQueryWatchParameters): Types." + q.Name + ";")
+			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts?: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
 			output.IndentAdd()
 			output.WriteLine("return this.useQuery('" + q.Name + "', variables, opts);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		} else {
 			output.WriteLine("use" + q.Name + "(opts: SpaceQueryWatchParameters & { suspense: false }): Types." + q.Name + " | null;")
-			output.WriteLine("use" + q.Name + "(opts: SpaceQueryWatchParameters): Types." + q.Name + ";")
-			output.WriteLine("use" + q.Name + "(opts: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
+			output.WriteLine("use" + q.Name + "(opts?: SpaceQueryWatchParameters): Types." + q.Name + ";")
+			output.WriteLine("use" + q.Name + "(opts?: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
 			output.IndentAdd()
 			output.WriteLine("return this.useQuery('" + q.Name + "', undefined, opts);")
 			output.IndentRemove()
