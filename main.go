@@ -42,6 +42,7 @@ func main() {
 	var schema string
 	var target string
 	var pkg string
+	var name string
 	app.Commands = []cli.Command{
 		{
 			Name:    "generate",
@@ -73,6 +74,11 @@ func main() {
 					Usage:       "Package name",
 					Destination: &pkg,
 				},
+				cli.StringFlag{
+					Name:        "name, n",
+					Usage:       "Name of client class",
+					Destination: &name,
+				},
 			},
 			Action: func(c *cli.Context) error {
 				if target != "kotlin" && target != "swift" && target != "typescript" && target != "client" {
@@ -99,7 +105,7 @@ func main() {
 				} else if target == "typescript" {
 					codegen.GenerateTypescript(model, output)
 				} else if target == "client" {
-					codegen.GenerateClient(model, output)
+					codegen.GenerateClient2(model, name, output)
 				}
 				return nil
 			},
