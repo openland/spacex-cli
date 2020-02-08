@@ -20,12 +20,10 @@ mutation AddUser($username: String!, $password: String!) {
 }
 
 fragment UserShort on User {
-    __typename
     id
 }
 
 fragment LampShort on Lamp {
-    __typename
     id
     brightness
     minBrightness
@@ -33,12 +31,10 @@ fragment LampShort on Lamp {
 }
 
 fragment DeviceNano on Device {
-    __typename
     id
 }
 
 fragment DeviceShort on Device {
-    __typename
     description
     addedBy {
         __typename

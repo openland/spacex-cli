@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/graphql-go/graphql/language/printer"
 	"github.com/graphql-go/graphql/language/source"
 	"io/ioutil"
 	"sort"
@@ -162,6 +163,41 @@ func convertVariables(variables []*ast.VariableDefinition, model *Model, clModel
 	return &Variables{res}
 }
 
+func normalizeSelector(selectionSet *ast.SelectionSet, root bool) {
+	hasTypename := false
+	for s := range selectionSet.Selections {
+		ss := selectionSet.Selections[s].(ast.Node)
+		if ss.GetKind() == "FragmentSpread" {
+			// Nothing to do
+		} else if ss.GetKind() == "Field" {
+			f := ss.(*ast.Field)
+			if f.Name.Value == "__typename" {
+				hasTypename = true
+			}
+			if f.SelectionSet != nil {
+				normalizeSelector(f.SelectionSet, false)
+			}
+		} else if ss.GetKind() == "InlineFragment" {
+			f := ss.(*ast.InlineFragment)
+			normalizeSelector(f.SelectionSet, false)
+		} else {
+			panic("Unknown selection: " + ss.GetKind())
+		}
+	}
+
+	if !hasTypename && !root {
+		selectionSet.Selections = append([]ast.Selection{ast.NewField(&ast.Field{
+			Name: ast.NewName(&ast.Name{
+				Value: "__typename",
+			}),
+		})}, selectionSet.Selections...)
+	}
+}
+
+func printQuery(src ast.Node) string {
+	return printer.Print(src).(string)
+}
+
 func prepareOperation(definition *ast.OperationDefinition, model *Model, clModel *ClientModel) {
 	root := clModel.Schema.QueryType.Name
 	if definition.Operation == "mutation" {
@@ -181,6 +217,7 @@ func prepareOperation(definition *ast.OperationDefinition, model *Model, clModel
 	for _, d := range dependencies {
 		body = body + " " + clModel.Sources[d]
 	}
+	// body = normalizeQuery(body)
 	body = strings.Replace(body, "\n", " ", -1)
 	for strings.Contains(body, "  ") {
 		body = strings.Replace(body, "  ", " ", -1)
@@ -507,6 +544,8 @@ func LoadModel(schemaPath string, files []string) *Model {
 			node := parsed.Definitions[i]
 			if node.GetKind() == "OperationDefinition" {
 				op := node.(*ast.OperationDefinition)
+				normalizeSelector(op.SelectionSet, true)
+
 				if op.Operation == "query" {
 					model.Queries[op.Name.Value] = op
 				} else if op.Operation == "mutation" {
@@ -516,11 +555,12 @@ func LoadModel(schemaPath string, files []string) *Model {
 				} else {
 					panic("Unknown operation: " + op.Operation)
 				}
-				model.Sources[op.Name.Value] = string(body[op.Loc.Start:op.Loc.End])
+				model.Sources[op.Name.Value] = printQuery(op)
 			} else if node.GetKind() == "FragmentDefinition" {
 				fr := node.(*ast.FragmentDefinition)
+				normalizeSelector(fr.SelectionSet, false)
 				model.Fragments[fr.Name.Value] = fr
-				model.Sources[fr.Name.Value] = string(body[fr.Loc.Start:fr.Loc.End])
+				model.Sources[fr.Name.Value] = printQuery(fr)
 			} else {
 				panic("Unknown node: " + node.GetKind())
 			}

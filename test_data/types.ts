@@ -141,34 +141,34 @@ export type AddUserMutation = (
 );
 
 export type UserShortFragment = (
-  { __typename: 'User' }
+  { __typename?: 'User' }
   & Pick<User, 'id'>
 );
 
 export type LampShortFragment = (
-  { __typename: 'Lamp' }
+  { __typename?: 'Lamp' }
   & Pick<Lamp, 'id' | 'brightness' | 'minBrightness' | 'maxBrightness'>
 );
 
 type DeviceNano_Lamp_Fragment = (
-  { __typename: 'Lamp' }
+  { __typename?: 'Lamp' }
   & Pick<Lamp, 'id'>
 );
 
 type DeviceNano_Switch_Fragment = (
-  { __typename: 'Switch' }
+  { __typename?: 'Switch' }
   & Pick<Switch, 'id'>
 );
 
 type DeviceNano_Lock_Fragment = (
-  { __typename: 'Lock' }
+  { __typename?: 'Lock' }
   & Pick<Lock, 'id'>
 );
 
 export type DeviceNanoFragment = DeviceNano_Lamp_Fragment | DeviceNano_Switch_Fragment | DeviceNano_Lock_Fragment;
 
 type DeviceShort_Lamp_Fragment = (
-  { __typename: 'Lamp' }
+  { __typename?: 'Lamp' }
   & Pick<Lamp, 'id' | 'brightness' | 'description'>
   & { addedBy: (
     { __typename: 'User' }
@@ -179,7 +179,7 @@ type DeviceShort_Lamp_Fragment = (
 );
 
 type DeviceShort_Switch_Fragment = (
-  { __typename: 'Switch' }
+  { __typename?: 'Switch' }
   & Pick<Switch, 'id' | 'numberOfButtons' | 'description'>
   & { addedBy: (
     { __typename: 'User' }
@@ -189,7 +189,7 @@ type DeviceShort_Switch_Fragment = (
 );
 
 type DeviceShort_Lock_Fragment = (
-  { __typename: 'Lock' }
+  { __typename?: 'Lock' }
   & Pick<Lock, 'description'>
   & { addedBy: (
     { __typename: 'User' }
