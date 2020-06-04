@@ -1,30 +1,33 @@
 /* tslint:disable */
 /* eslint-disable */
 import * as Types from './spacex.types';
-import { GraphqlEngine, GraphqlActiveSubscription, OperationParameters, GraphqlSubscriptionHandler, BaseSpaceXClient, SpaceQueryWatchParameters } from '@openland/spacex';
+import { SpaceXClientParameters, GraphqlActiveSubscription, QueryParameters, MutationParameters, SubscriptionParameters, GraphqlSubscriptionHandler, BaseSpaceXClient, SpaceQueryWatchParameters } from '@openland/spacex';
 
-export class  extends BaseSpaceXClient {
-    constructor(engine: GraphqlEngine) {
-        super(engine);
+export class ApiClient extends BaseSpaceXClient {
+    constructor(params: SpaceXClientParameters) {
+        super(params);
     }
-    queryDiscoverDevices(opts?: OperationParameters): Promise<Types.DiscoverDevices> {
-        return this.query('DiscoverDevices', undefined, opts);
+    withParameters(params: Partial<SpaceXClientParameters>) {
+        return new ApiClient({ ... params, engine: this.engine, globalCache: this.globalCache});
     }
-    refetchDiscoverDevices(opts?: OperationParameters): Promise<Types.DiscoverDevices> {
-        return this.refetch('DiscoverDevices', undefined);
+    queryDiscoverDevices(params?: QueryParameters): Promise<Types.DiscoverDevices> {
+        return this.query('DiscoverDevices', undefined, params);
+    }
+    refetchDiscoverDevices(params?: QueryParameters): Promise<Types.DiscoverDevices> {
+        return this.refetch('DiscoverDevices', undefined, params);
     }
     updateDiscoverDevices(updater: (data: Types.DiscoverDevices) => Types.DiscoverDevices | null): Promise<boolean> {
         return this.updateQuery(updater, 'DiscoverDevices', undefined);
     }
-    useDiscoverDevices(opts: SpaceQueryWatchParameters & { suspense: false }): Types.DiscoverDevices | null;
-    useDiscoverDevices(opts: SpaceQueryWatchParameters): Types.DiscoverDevices;
-    useDiscoverDevices(opts: SpaceQueryWatchParameters): Types.DiscoverDevices | null {
-        return this.useQuery('DiscoverDevices', undefined, opts);
+    useDiscoverDevices(params: SpaceQueryWatchParameters & { suspense: false }): Types.DiscoverDevices | null;
+    useDiscoverDevices(params?: SpaceQueryWatchParameters): Types.DiscoverDevices;
+    useDiscoverDevices(params?: SpaceQueryWatchParameters): Types.DiscoverDevices | null {
+        return this.useQuery('DiscoverDevices', undefined, params);
     }
-    mutateAddUser(variables: Types.AddUserVariables): Promise<Types.AddUser> {
-        return this.mutate('AddUser', variables);
+    mutateAddUser(variables: Types.AddUserVariables, params?: MutationParameters): Promise<Types.AddUser> {
+        return this.mutate('AddUser', variables, params);
     }
-    mutateUpdateDeviceDescription(variables: Types.UpdateDeviceDescriptionVariables): Promise<Types.UpdateDeviceDescription> {
-        return this.mutate('UpdateDeviceDescription', variables);
+    mutateUpdateDeviceDescription(variables: Types.UpdateDeviceDescriptionVariables, params?: MutationParameters): Promise<Types.UpdateDeviceDescription> {
+        return this.mutate('UpdateDeviceDescription', variables, params);
     }
 }

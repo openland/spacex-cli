@@ -12,27 +12,33 @@ func GenerateClient2(model *il.Model, name string, to string) {
 	output.WriteLine("/* tslint:disable */")
 	output.WriteLine("/* eslint-disable */")
 	output.WriteLine("import * as Types from './spacex.types';")
-	output.WriteLine("import { GraphqlEngine, GraphqlActiveSubscription, OperationParameters, GraphqlSubscriptionHandler, BaseSpaceXClient, SpaceQueryWatchParameters } from '@openland/spacex';")
+	output.WriteLine("import { SpaceXClientParameters, GraphqlActiveSubscription, QueryParameters, MutationParameters, SubscriptionParameters, GraphqlSubscriptionHandler, BaseSpaceXClient, SpaceQueryWatchParameters } from '@openland/spacex';")
 	output.WriteLine("")
 	output.WriteLine("export class " + name + " extends BaseSpaceXClient {")
 	output.IndentAdd()
-	output.WriteLine("constructor(engine: GraphqlEngine) {")
+	output.WriteLine("constructor(params: SpaceXClientParameters) {")
 	output.IndentAdd()
-	output.WriteLine("super(engine);")
+	output.WriteLine("super(params);")
+	output.IndentRemove()
+	output.WriteLine("}")
+
+	output.WriteLine("withParameters(params: Partial<SpaceXClientParameters>) {")
+	output.IndentAdd()
+	output.WriteLine("return new " + name + "({ ... params, engine: this.engine, globalCache: this.globalCache});")
 	output.IndentRemove()
 	output.WriteLine("}")
 
 	for _, q := range model.Queries {
 		if len(q.Variables.Variables) > 0 {
-			output.WriteLine("query" + q.Name + "(variables: Types." + q.Name + "Variables, opts?: OperationParameters): Promise<Types." + q.Name + "> {")
+			output.WriteLine("query" + q.Name + "(variables: Types." + q.Name + "Variables, params?: QueryParameters): Promise<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.query('" + q.Name + "', variables, opts);")
+			output.WriteLine("return this.query('" + q.Name + "', variables, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		} else {
-			output.WriteLine("query" + q.Name + "(opts?: OperationParameters): Promise<Types." + q.Name + "> {")
+			output.WriteLine("query" + q.Name + "(params?: QueryParameters): Promise<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.query('" + q.Name + "', undefined, opts);")
+			output.WriteLine("return this.query('" + q.Name + "', undefined, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		}
@@ -40,15 +46,15 @@ func GenerateClient2(model *il.Model, name string, to string) {
 
 	for _, q := range model.Queries {
 		if len(q.Variables.Variables) > 0 {
-			output.WriteLine("refetch" + q.Name + "(variables: Types." + q.Name + "Variables, opts?: OperationParameters): Promise<Types." + q.Name + "> {")
+			output.WriteLine("refetch" + q.Name + "(variables: Types." + q.Name + "Variables, params?: QueryParameters): Promise<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.refetch('" + q.Name + "', variables);")
+			output.WriteLine("return this.refetch('" + q.Name + "', variables, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		} else {
-			output.WriteLine("refetch" + q.Name + "(opts?: OperationParameters): Promise<Types." + q.Name + "> {")
+			output.WriteLine("refetch" + q.Name + "(params?: QueryParameters): Promise<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.refetch('" + q.Name + "', undefined);")
+			output.WriteLine("return this.refetch('" + q.Name + "', undefined, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		}
@@ -72,19 +78,19 @@ func GenerateClient2(model *il.Model, name string, to string) {
 
 	for _, q := range model.Queries {
 		if len(q.Variables.Variables) > 0 {
-			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts: SpaceQueryWatchParameters & { suspense: false }): Types." + q.Name + " | null;")
-			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts?: SpaceQueryWatchParameters): Types." + q.Name + ";")
-			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, opts?: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
+			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, params: SpaceQueryWatchParameters & { suspense: false }): Types." + q.Name + " | null;")
+			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, params?: SpaceQueryWatchParameters): Types." + q.Name + ";")
+			output.WriteLine("use" + q.Name + "(variables: Types." + q.Name + "Variables, params?: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
 			output.IndentAdd()
-			output.WriteLine("return this.useQuery('" + q.Name + "', variables, opts);")
+			output.WriteLine("return this.useQuery('" + q.Name + "', variables, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		} else {
-			output.WriteLine("use" + q.Name + "(opts: SpaceQueryWatchParameters & { suspense: false }): Types." + q.Name + " | null;")
-			output.WriteLine("use" + q.Name + "(opts?: SpaceQueryWatchParameters): Types." + q.Name + ";")
-			output.WriteLine("use" + q.Name + "(opts?: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
+			output.WriteLine("use" + q.Name + "(params: SpaceQueryWatchParameters & { suspense: false }): Types." + q.Name + " | null;")
+			output.WriteLine("use" + q.Name + "(params?: SpaceQueryWatchParameters): Types." + q.Name + ";")
+			output.WriteLine("use" + q.Name + "(params?: SpaceQueryWatchParameters): Types." + q.Name + " | null {")
 			output.IndentAdd()
-			output.WriteLine("return this.useQuery('" + q.Name + "', undefined, opts);")
+			output.WriteLine("return this.useQuery('" + q.Name + "', undefined, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		}
@@ -92,15 +98,15 @@ func GenerateClient2(model *il.Model, name string, to string) {
 
 	for _, q := range model.Mutations {
 		if len(q.Variables.Variables) > 0 {
-			output.WriteLine("mutate" + q.Name + "(variables: Types." + q.Name + "Variables): Promise<Types." + q.Name + "> {")
+			output.WriteLine("mutate" + q.Name + "(variables: Types." + q.Name + "Variables, params?: MutationParameters): Promise<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.mutate('" + q.Name + "', variables);")
+			output.WriteLine("return this.mutate('" + q.Name + "', variables, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		} else {
-			output.WriteLine("mutate" + q.Name + "(): Promise<Types." + q.Name + "> {")
+			output.WriteLine("mutate" + q.Name + "(params?: MutationParameters): Promise<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.mutate('" + q.Name + "');")
+			output.WriteLine("return this.mutate('" + q.Name + "', undefined, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		}
@@ -108,15 +114,15 @@ func GenerateClient2(model *il.Model, name string, to string) {
 
 	for _, q := range model.Subscriptions {
 		if len(q.Variables.Variables) > 0 {
-			output.WriteLine("subscribe" + q.Name + "(variables: Types." + q.Name + "Variables, handler: GraphqlSubscriptionHandler<Types." + q.Name + ">): GraphqlActiveSubscription<Types." + q.Name + "> {")
+			output.WriteLine("subscribe" + q.Name + "(variables: Types." + q.Name + "Variables, handler: GraphqlSubscriptionHandler<Types." + q.Name + ">, params?: SubscriptionParameters): GraphqlActiveSubscription<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.subscribe(handler, '" + q.Name + "', variables);")
+			output.WriteLine("return this.subscribe(handler, '" + q.Name + "', variables, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		} else {
-			output.WriteLine("subscribe" + q.Name + "(handler: GraphqlSubscriptionHandler<Types." + q.Name + ">): GraphqlActiveSubscription<Types." + q.Name + "> {")
+			output.WriteLine("subscribe" + q.Name + "(handler: GraphqlSubscriptionHandler<Types." + q.Name + ">, params?: SubscriptionParameters): GraphqlActiveSubscription<Types." + q.Name + "> {")
 			output.IndentAdd()
-			output.WriteLine("return this.subscribe(handler, '" + q.Name + "', undefined);")
+			output.WriteLine("return this.subscribe(handler, '" + q.Name + "', undefined, params);")
 			output.IndentRemove()
 			output.WriteLine("}")
 		}
