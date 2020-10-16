@@ -1,9 +1,17 @@
 {
   "name": "@openland/spacex-cli",
-  "version": "3.0.0",
+  "version": "3.1.1",
   "repository": "https://github.com/openland/spacex-cli.git",
   "author": "Steve Korshakov <steve@openland.com>",
   "license": "MIT",
+  "files": [
+    "bin/spacex-cli-linux",
+    "bin/spacex-cli-macos",
+    "install.js"
+  ],
+  "scripts": {
+    "postinstall": "node ./install.js"
+  },
   "bin": {
     "spacex": "./bin/spacex-cli"
   }
